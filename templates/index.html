@@ -1,0 +1,2777 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人工智能停车场管理系统</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #00e4ff;
+            --secondary-color: #0066cc;
+            --background-color: #001529;
+            --card-background: #0a2744;
+            --text-primary: #ffffff;
+            --text-secondary: #a7b7c7;
+            --border-color: #00e4ff;
+            --border-radius: 4px;
+            --shadow: 0 2px 10px rgba(0, 228, 255, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: auto auto auto;
+            gap: 15px;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .header {
+            grid-column: span 12;
+            text-align: center;
+            padding: 15px;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .header::before,
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 30%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+        }
+
+        .header::before {
+            left: 0;
+        }
+
+        .header::after {
+            right: 0;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            color: var(--primary-color);
+            text-shadow: 0 0 10px rgba(0, 228, 255, 0.5);
+            margin: 0;
+        }
+
+        .data-card {
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .data-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-color), transparent);
+        }
+
+        .data-card h3 {
+            font-size: 1.2em;
+            margin: 0 0 15px 0;
+            color: var(--primary-color);
+        }
+
+        .stats-section {
+            grid-column: span 3;
+            display: grid;
+            gap: 15px;
+        }
+
+        .main-section {
+            grid-column: span 6;
+            display: grid;
+            gap: 15px;
+        }
+
+        .side-section {
+            grid-column: span 3;
+            display: grid;
+            gap: 15px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .map-container {
+            height: 350px;
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            position: relative;
+            overflow: auto;
+        }
+
+        .chart-container {
+            height: 350px;
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .parking-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 6px;
+            padding: 15px;
+            padding-top: 60px; /* 为顶部按钮留出空间 */
+        }
+
+        .parking-spot {
+            aspect-ratio: 1;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 228, 255, 0.1);
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 4px;
+            font-size: 0.85em;
+        }
+
+        .parking-spot.occupied {
+            background: rgba(255, 71, 87, 0.2);
+            border-color: #ff4757;
+        }
+
+        .parking-spot:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .parking-spot .spot-number {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .parking-spot .spot-status {
+            font-size: 0.75em;
+            text-align: center;
+            word-break: break-all;
+        }
+
+        .real-time-data {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .real-time-item {
+            background: rgba(0, 228, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+
+        .camera-section {
+            grid-column: span 12;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .camera-feed {
+            position: relative;
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            height: 250px;
+        }
+
+        .camera-feed h3 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expand-btn {
+            background: rgba(0, 228, 255, 0.1);
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 4px 8px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .expand-btn:hover {
+            background: rgba(0, 228, 255, 0.2);
+        }
+
+        .camera-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+        }
+
+        .camera-modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            margin: 5vh auto;
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+        }
+
+        .camera-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .camera-modal-title {
+            color: var(--primary-color);
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .close-camera-modal {
+            color: var(--primary-color);
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .camera-modal video {
+            width: 100%;
+            height: calc(100% - 60px);
+            object-fit: contain;
+            background: #000;
+            border-radius: var(--border-radius);
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: repeat(6, 1fr);
+                padding: 10px;
+            }
+
+            .stats-section,
+            .main-section,
+            .side-section {
+                grid-column: span 6;
+            }
+
+            .map-container {
+                height: 350px;
+            }
+
+            .camera-section {
+                grid-template-columns: 1fr;
+            }
+
+            .camera-feed {
+                height: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+                padding: 8px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .stats-section,
+            .main-section,
+            .side-section {
+                grid-column: span 1;
+            }
+
+            .real-time-data {
+                position: static;
+                margin-top: 10px;
+                justify-content: center;
+            }
+
+            .map-container {
+                height: 300px;
+            }
+
+            .stat-value {
+                font-size: 1.5em;
+            }
+
+            .operation-buttons {
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.8em;
+            }
+        }
+
+        /* 添加模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            background: var(--card-background);
+            margin: 5% auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 450px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h2 {
+            font-size: 1.5em;
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            background: rgba(0, 228, 255, 0.1);
+            color: var(--text-primary);
+            border-radius: var(--border-radius);
+            font-size: 0.9em;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--background-color);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: var(--text-primary);
+        }
+
+        .camera-container {
+            width: 100%;
+            height: 180px;
+            background: #000;
+            margin-bottom: 12px;
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .camera-controls {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(5px);
+        }
+
+        .capture-btn, .upload-btn {
+            background: rgba(0, 228, 255, 0.8);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: var(--background-color);
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .capture-btn:hover, .upload-btn:hover {
+            background: rgba(0, 228, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 228, 255, 0.3);
+        }
+
+        .capture-btn i, .upload-btn i {
+            font-size: 1.1em;
+        }
+
+        .upload-btn {
+            background: rgba(0, 228, 255, 0.8);
+        }
+
+        .upload-btn input[type="file"] {
+            display: none;
+        }
+
+        .operation-buttons {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 8px;
+            z-index: 900;
+        }
+
+        #exit-info {
+            background: rgba(0, 228, 255, 0.1);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin: 12px 0;
+            font-size: 0.9em;
+        }
+
+        #exit-info p {
+            margin: 5px 0;
+        }
+
+        .vehicle-scroll-container {
+            margin-top: 15px;
+            background: rgba(0, 228, 255, 0.1);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .vehicle-scroll-content {
+            height: 160px;
+            overflow-y: auto;
+            position: relative;
+            /* 自定义滚动条样式 */
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--card-background);
+        }
+
+        /* 自定义滚动条样式（Webkit浏览器） */
+        .vehicle-scroll-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .vehicle-scroll-content::-webkit-scrollbar-track {
+            background: var(--card-background);
+            border-radius: 3px;
+        }
+
+        .vehicle-scroll-content::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .vehicle-info {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(0, 228, 255, 0.2);
+            font-size: 0.85em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            background: var(--card-background);
+            transition: background-color 0.2s;
+        }
+
+        .vehicle-info:hover {
+            background: rgba(0, 228, 255, 0.1);
+        }
+
+        .peak-hours-container,
+        .peak-hours-title,
+        .peak-hours-content,
+        .area-stats,
+        .area-stat {
+            display: none;
+        }
+
+        .time-distribution-stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 228, 255, 0.1);
+            border-radius: var(--border-radius);
+        }
+
+        .stat-grid {
+            margin-bottom: 20px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            padding: 10px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px 0;
+        }
+
+        .action-btn {
+            background: rgba(0, 228, 255, 0.1);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 228, 255, 0.2);
+            border-color: var(--primary-color);
+        }
+
+        .stat-grid {
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+
+        .stat-value {
+            font-size: 1.6em;
+        }
+
+        .status-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 228, 255, 0.05);
+            border-radius: var(--border-radius);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent,
+                rgba(0, 228, 255, 0.5),
+                rgba(0, 228, 255, 0.8),
+                rgba(0, 228, 255, 0.5),
+                transparent
+            );
+            box-shadow: 0 0 10px rgba(0, 228, 255, 0.3);
+        }
+
+        .status-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent,
+                rgba(0, 228, 255, 0.3),
+                rgba(0, 228, 255, 0.5),
+                rgba(0, 228, 255, 0.3),
+                transparent
+            );
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            padding: 8px;
+            border-radius: var(--border-radius);
+            background: rgba(0, 228, 255, 0.03);
+            transition: all 0.3s ease;
+        }
+
+        .status-item:hover {
+            background: rgba(0, 228, 255, 0.08);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.connected {
+            background-color: #2ecc71;
+            box-shadow: 0 0 5px #2ecc71;
+        }
+
+        .status-indicator.disconnected {
+            background-color: #e74c3c;
+            box-shadow: 0 0 5px #e74c3c;
+        }
+
+        .network-chart-container {
+            height: 40px;
+            margin: 8px 0;
+            position: relative;
+            padding: 5px;
+            background: rgba(0, 228, 255, 0.02);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 228, 255, 0.1);
+        }
+
+        .network-status-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            background: rgba(0, 228, 255, 0.03);
+            border-radius: var(--border-radius);
+            margin-top: 5px;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent,
+                rgba(0, 228, 255, 0.2),
+                rgba(0, 228, 255, 0.3),
+                rgba(0, 228, 255, 0.2),
+                transparent
+            );
+            margin: 10px 0;
+        }
+
+        /* 收入详情模态框样式 */
+        .income-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+
+        .income-modal-content {
+            position: relative;
+            background: var(--card-background);
+            margin: 5vh auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .income-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .income-title {
+            font-size: 1.5em;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .income-close {
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .income-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .income-stat-card {
+            background: rgba(0, 228, 255, 0.1);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .income-stat-value {
+            font-size: 1.8em;
+            color: var(--primary-color);
+            margin: 5px 0;
+        }
+
+        .income-stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .income-chart-container {
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        .income-table-container {
+            margin-top: 20px;
+        }
+
+        .income-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .income-table th,
+        .income-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 228, 255, 0.2);
+        }
+
+        .income-table th {
+            color: var(--primary-color);
+            font-weight: normal;
+        }
+
+        .income-table tbody tr:hover {
+            background: rgba(0, 228, 255, 0.1);
+        }
+
+        .income-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .income-filter {
+            background: rgba(0, 228, 255, 0.1);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .income-filter.active {
+            background: var(--primary-color);
+            color: var(--background-color);
+        }
+
+        /* 停车场分析模态框样式 */
+        .analytics-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+
+        .analytics-modal-content {
+            position: relative;
+            background: var(--card-background);
+            margin: 5vh auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 1000px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .analytics-title {
+            font-size: 1.5em;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .analytics-close {
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .analytics-card {
+            background: rgba(0, 228, 255, 0.1);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 228, 255, 0.2);
+        }
+
+        .analytics-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .analytics-card-title {
+            font-size: 1.1em;
+            margin: 0;
+        }
+
+        .analytics-value {
+            font-size: 2em;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .analytics-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .analytics-chart-container {
+            height: 300px;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 228, 255, 0.05);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 228, 255, 0.2);
+        }
+
+        .analytics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .analytics-table th,
+        .analytics-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 228, 255, 0.2);
+        }
+
+        .analytics-table th {
+            color: var(--primary-color);
+            font-weight: normal;
+            background: rgba(0, 228, 255, 0.05);
+        }
+
+        .analytics-table tbody tr:hover {
+            background: rgba(0, 228, 255, 0.1);
+        }
+
+        .analytics-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .analytics-filter {
+            background: rgba(0, 228, 255, 0.1);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .analytics-filter.active {
+            background: var(--primary-color);
+            color: var(--background-color);
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .capture-btn, .upload-btn {
+            background: rgba(0, 228, 255, 0.8);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            color: var(--background-color);
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .capture-btn:hover, .upload-btn:hover {
+            background: rgba(0, 228, 255, 1);
+            transform: translateY(-2px);
+        }
+
+        .upload-btn {
+            background: rgba(0, 228, 255, 0.8);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            color: var(--background-color);
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .upload-btn i {
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="header">
+            <h1>智能停车场数据监控管理系统</h1>
+        </header>
+
+        <section class="stats-section">
+            <div class="data-card">
+                <h3>实时统计</h3>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">总车位数</div>
+                        <div class="stat-value" id="total-spots">40</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">已占用</div>
+                        <div class="stat-value" id="occupied-spots">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">当前在场</div>
+                        <div class="stat-value" id="current-parked">0 辆</div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn">
+                        <i class="fas fa-chart-line"></i>
+                        收入详情
+                    </button>
+                    <button class="action-btn">
+                        <i class="fas fa-chart-pie"></i>
+                        停车场分析
+                    </button>
+                </div>
+                <div class="status-section">
+                    <div class="status-item">
+                        <div class="status-indicator connected" id="camera-status"></div>
+                        <span>摄像头状态：</span>
+                        <span id="camera-status-text">已连接</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="status-item">
+                        <span>网络状态：</span>
+                        <span id="network-speed">0 ms</span>
+                    </div>
+                    <div class="network-chart-container">
+                        <canvas id="network-chart"></canvas>
+                    </div>
+                    <div class="network-status-label">
+                        <span>延迟</span>
+                        <span id="network-latency">0ms</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="status-item">
+                        <div class="status-indicator connected" id="db-status"></div>
+                        <span>数据库状态：</span>
+                        <span id="db-status-text">已连接</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="main-section">
+            <div class="data-card map-container">
+                <div class="operation-buttons">
+                    <button class="btn btn-primary" onclick="showEnterModal()">车辆入库</button>
+                    <button class="btn btn-secondary" onclick="showExitModal()">车辆出库</button>
+                </div>
+                <div id="parking-grid" class="parking-grid">
+                    <!-- 停车位将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            <div class="data-card">
+                <h3>进出场时段分布</h3>
+                <div style="position: relative; height: 350px;">
+                    <canvas id="time-distribution-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="side-section">
+            <div class="data-card">
+                <h3>车辆统计</h3>
+                <div style="position: relative; height: 250px;">
+                    <canvas id="vehicle-stats-chart"></canvas>
+                </div>
+                <div class="vehicle-scroll-container">
+                    <div class="vehicle-scroll-title">当前停车信息</div>
+                    <div class="vehicle-scroll-content" id="vehicle-scroll">
+                        <!-- 车辆信息将通过JavaScript动态添加 -->
+                    </div>
+                </div>
+            </div>
+            <div class="data-card">
+                <h3>收入统计</h3>
+                <div class="stat-item">
+                    <div class="stat-label">今日收入</div>
+                    <div class="stat-value" id="today-income">¥0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">本月收入</div>
+                    <div class="stat-value" id="month-income">¥0</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="camera-section">
+            <div class="data-card camera-feed">
+                <h3>
+                    入场监控
+                    <button class="expand-btn" onclick="expandCamera('entrance')">
+                        <i class="fas fa-expand"></i> 放大
+                    </button>
+                </h3>
+                <video id="entrance-camera" autoplay playsinline></video>
+            </div>
+            <div class="data-card camera-feed">
+                <h3>
+                    出场监控
+                    <button class="expand-btn" onclick="expandCamera('exit')">
+                        <i class="fas fa-expand"></i> 放大
+                    </button>
+                </h3>
+                <video id="exit-camera" autoplay playsinline></video>
+            </div>
+        </section>
+
+        <!-- 入库模态框 -->
+        <div id="enter-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" onclick="hideModal('enter-modal')">&times;</span>
+                <div class="modal-header">
+                    <h2>车辆入库</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="camera-container">
+                        <div class="camera-guide" style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: white; text-align: center; z-index: 1;">
+                            <p>请将车牌置于框内，保持画面稳定</p>
+                            <p>确保光线充足，避免逆光</p>
+                        </div>
+                        <video id="camera-feed" autoplay playsinline></video>
+                        <div class="plate-frame" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid #00e4ff; width: 80%; height: 40%; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);"></div>
+                        <div class="camera-controls">
+                            <button class="capture-btn" onclick="captureImage()">
+                                <i class="fas fa-camera"></i>
+                                拍照识别
+                            </button>
+                            <label class="upload-btn">
+                                <i class="fas fa-upload"></i>
+                                上传照片
+                                <input type="file" id="modal-upload" accept="image/*" onchange="handleModalImageUpload(this)">
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>车牌号</label>
+                        <input type="text" id="plate-number" placeholder="请输入或通过摄像头识别">
+                    </div>
+                    <div class="form-group">
+                        <label>选择车位</label>
+                        <select id="spot-select"></select>
+                    </div>
+                    <button class="btn btn-primary" onclick="handleVehicleEnter()">确认入库</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 出库模态框 -->
+        <div id="exit-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" onclick="hideModal('exit-modal')">&times;</span>
+                <div class="modal-header">
+                    <h2>车辆出库</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>选择车位</label>
+                        <select id="exit-spot-select"></select>
+                    </div>
+                    <div id="exit-info" style="margin: 15px 0;"></div>
+                    <button class="btn btn-primary" onclick="handleVehicleExit()">确认出库</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 放大摄像头画面 -->
+        <div id="camera-modal" class="camera-modal">
+            <div class="camera-modal-content">
+                <div class="camera-modal-header">
+                    <h2 class="camera-modal-title" id="camera-modal-title">监控画面</h2>
+                    <button class="close-camera-modal" onclick="closeExpandedCamera()">&times;</button>
+                </div>
+                <video id="expanded-camera" autoplay playsinline></video>
+            </div>
+        </div>
+
+        <!-- 收入详情模态框 -->
+        <div id="income-modal" class="income-modal">
+            <div class="income-modal-content">
+                <div class="income-header">
+                    <h2 class="income-title">收入详情</h2>
+                    <button class="income-close" onclick="hideIncomeModal()">&times;</button>
+                </div>
+                <div class="income-stats">
+                    <div class="income-stat-card">
+                        <div class="income-stat-value" id="today-income">¥0</div>
+                        <div class="income-stat-label">今日收入</div>
+                    </div>
+                    <div class="income-stat-card">
+                        <div class="income-stat-value" id="month-income">¥0</div>
+                        <div class="income-stat-label">本月收入</div>
+                    </div>
+                </div>
+                <div class="income-chart-container">
+                    <canvas id="income-chart"></canvas>
+                </div>
+                <div class="income-table-container">
+                    <table class="income-table">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>收入</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 收入数据将通过JavaScript动态添加 -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="income-filters">
+                    <button class="income-filter" onclick="filterIncome('today')">今日</button>
+                    <button class="income-filter" onclick="filterIncome('month')">本月</button>
+                    <button class="income-filter" onclick="filterIncome('all')">全部</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 停车场分析模态框 -->
+        <div id="analytics-modal" class="analytics-modal">
+            <div class="analytics-modal-content">
+                <div class="analytics-header">
+                    <h2 class="analytics-title">停车场分析</h2>
+                    <button class="analytics-close" onclick="hideAnalyticsModal()">&times;</button>
+                </div>
+                <div class="analytics-filters">
+                    <button class="analytics-filter active" onclick="filterAnalytics('today')">今日</button>
+                    <button class="analytics-filter" onclick="filterAnalytics('week')">本周</button>
+                    <button class="analytics-filter" onclick="filterAnalytics('month')">本月</button>
+                </div>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <div class="analytics-card-header">
+                            <h3 class="analytics-card-title">车位利用率</h3>
+                            <i class="fas fa-parking"></i>
+                        </div>
+                        <div class="analytics-value" id="utilization-rate">0%</div>
+                        <div class="analytics-label">平均利用率</div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-card-header">
+                            <h3 class="analytics-card-title">周转率</h3>
+                            <i class="fas fa-sync"></i>
+                        </div>
+                        <div class="analytics-value" id="turnover-rate">0</div>
+                        <div class="analytics-label">车位周转次数/天</div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-card-header">
+                            <h3 class="analytics-card-title">平均停车时长</h3>
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="analytics-value" id="avg-duration">0小时</div>
+                        <div class="analytics-label">每车平均停车时间</div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-card-header">
+                            <h3 class="analytics-card-title">高峰时段</h3>
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="analytics-value" id="peak-hours">--:--</div>
+                        <div class="analytics-label">最繁忙时段</div>
+                    </div>
+                </div>
+                <div class="analytics-chart-container">
+                    <canvas id="analytics-chart"></canvas>
+                </div>
+                <div class="analytics-table-container">
+                    <table class="analytics-table">
+                        <thead>
+                            <tr>
+                                <th>区域</th>
+                                <th>总车位</th>
+                                <th>当前占用</th>
+                                <th>利用率</th>
+                                <th>今日流量</th>
+                            </tr>
+                        </thead>
+                        <tbody id="area-stats-body">
+                            <!-- 区域统计数据将通过JavaScript动态添加 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script>
+        let timeDistributionChart = null; // 全局变量存储图表实例
+        let networkChart = null;
+        let incomeChart = null;
+        let analyticsChart = null;
+        let stream = null; // 添加全局stream变量
+
+        function initializeCharts() {
+            console.log('开始初始化图表...');
+            
+            // 初始化时段分布图表
+            const timeDistributionCtx = document.getElementById('time-distribution-chart');
+            if (!timeDistributionCtx) {
+                console.error('找不到时段分布图表容器');
+                return;
+            }
+
+            try {
+                console.log('开始初始化时段分布图表');
+                timeDistributionChart = new Chart(timeDistributionCtx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`),
+                        datasets: [
+                            {
+                                label: '进场车辆',
+                                data: Array(24).fill(0),
+                                borderColor: 'rgba(0, 228, 255, 0.8)',
+                                backgroundColor: 'rgba(0, 228, 255, 0.2)',
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: '出场车辆',
+                                data: Array(24).fill(0),
+                                borderColor: 'rgba(255, 71, 87, 0.8)',
+                                backgroundColor: 'rgba(255, 71, 87, 0.2)',
+                                fill: true,
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: '#ffffff'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#ffffff'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#ffffff'
+                                }
+                            }
+                        }
+                    }
+                });
+                console.log('时段分布图表初始化完成');
+
+                // 初始化车辆统计图表
+                console.log('开始初始化车辆统计图表');
+                const vehicleStatsCtx = document.getElementById('vehicle-stats-chart');
+                if (!vehicleStatsCtx) {
+                    console.error('找不到车辆统计图表容器');
+                    return;
+                }
+
+                window.vehicleStatsChart = new Chart(vehicleStatsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['今日数据'],
+                        datasets: [
+                            {
+                                label: '进场车辆',
+                                data: [0],
+                                backgroundColor: 'rgba(0, 228, 255, 0.8)',
+                                borderColor: 'rgba(0, 228, 255, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '出场车辆',
+                                data: [0],
+                                backgroundColor: 'rgba(255, 71, 87, 0.8)',
+                                borderColor: 'rgba(255, 71, 87, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: '#ffffff',
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#ffffff',
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#ffffff',
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                console.log('车辆统计图表初始化完成');
+            } catch (error) {
+                console.error('图表初始化失败:', error);
+            }
+        }
+
+        /**
+         * 生成停车场网格布局
+         * 创建A-D四个区域，每个区域10个车位
+         */
+        function generateParkingGrid() {
+            const grid = document.getElementById('parking-grid');
+            const areas = ['A', 'B', 'C', 'D'];
+            
+            areas.forEach(area => {
+                // 添加区域标题
+                const areaTitle = document.createElement('div');
+                areaTitle.className = 'area-title';
+                areaTitle.style.cssText = `
+                    grid-column: 1 / -1;
+                    padding: 10px;
+                    background: rgba(0, 228, 255, 0.1);
+                    margin: 5px 0;
+                    border-radius: var(--border-radius);
+                    text-align: center;
+                    font-weight: bold;
+                    color: var(--primary-color);
+                `;
+                areaTitle.textContent = `${area}区`;
+                grid.appendChild(areaTitle);
+
+                // 生成该区域的所有车位
+                for (let i = 1; i <= 10; i++) {
+                    const spot = document.createElement('div');
+                    spot.className = 'parking-spot';
+                    spot.id = `${area}-${i.toString().padStart(2, '0')}`;
+                    spot.innerHTML = `
+                        <div class="spot-number">${area}-${i.toString().padStart(2, '0')}</div>
+                        <div class="spot-status">空闲</div>
+                    `;
+                    grid.appendChild(spot);
+                }
+            });
+        }
+
+        /**
+         * 页面加载完成后的初始化操作
+         * 包括：生成车位、初始化图表、摄像头、数据更新等
+         */
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('页面加载完成，开始初始化...');
+            try {
+                // 生成停车位网格
+                generateParkingGrid();
+
+                // 初始化图表
+                initializeCharts();
+
+                // 初始化监控摄像头
+                await initializeMonitoringCameras();
+
+                // 立即更新所有数据
+                const spots = await updateParkingSpots();
+                await updateTimeDistributionChart();
+                await updateVehicleStatsChart();
+                await updateIncome();
+                await updateVehicleScroll();
+
+                // 保存数据到本地存储
+                if (spots && spots.length > 0) {
+                    localStorage.setItem('parkingSpots', JSON.stringify(spots));
+                }
+
+                // 绑定收入详情按钮点击事件
+                document.querySelector('.action-btn:nth-child(1)').addEventListener('click', async function() {
+                    showIncomeModal();
+                    await loadIncomeData('today');  // 默认加载今日数据
+                });
+
+                // 绑定停车场分析按钮点击事件
+                document.querySelector('.action-btn:nth-child(2)').addEventListener('click', async function() {
+                    showAnalyticsModal();
+                    await loadAnalyticsData('today');  // 默认加载今日数据
+                });
+
+                // 设置定时更新
+                setInterval(async () => {
+                    const updatedSpots = await updateParkingSpots();
+                    if (updatedSpots && updatedSpots.length > 0) {
+                        localStorage.setItem('parkingSpots', JSON.stringify(updatedSpots));
+                    }
+                    await updateVehicleScroll();
+                    await updateIncome();
+                }, 5000);
+                
+                setInterval(updateTimeDistributionChart, 60000);
+                setInterval(updateVehicleStatsChart, 60000);
+
+                // 初始化网络状态图表
+                initializeNetworkChart();
+                
+                // 定期更新状态
+                setInterval(updateNetworkStatus, 1000);
+                setInterval(updateCameraStatus, 5000);
+                setInterval(updateDBStatus, 5000);
+            } catch (error) {
+                console.error('页面初始化失败:', error);
+            }
+        });
+
+        /**
+         * 显示车辆入库模态框
+         * 初始化摄像头并更新可用车位列表
+         */
+        async function showEnterModal() {
+            document.getElementById('enter-modal').style.display = 'block';
+            await initCamera();
+            updateAvailableSpots();
+        }
+
+        /**
+         * 显示车辆出库模态框
+         * 更新已占用车位列表
+         */
+        function showExitModal() {
+            document.getElementById('exit-modal').style.display = 'block';
+            updateOccupiedSpots();
+        }
+
+        /**
+         * 隐藏模态框并停止摄像头流
+         */
+        async function hideModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+
+        /**
+         * 初始化摄像头设备
+         * 获取摄像头权限并显示视频流
+         */
+        async function initCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: "environment", // 优先使用后置摄像头
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                document.getElementById('camera-feed').srcObject = stream;
+            } catch (error) {
+                console.error('摄像头初始化失败:', error);
+                alert('无法访问摄像头，请检查权限设置');
+            }
+        }
+
+        /**
+         * 车牌识别功能
+         * 拍照并发送到后端进行识别
+         */
+        async function captureImage() {
+            try {
+                const video = document.getElementById('camera-feed');
+                if (!video) {
+                    throw new Error('找不到摄像头元素');
+                }
+                
+                if (!video.videoWidth || !video.videoHeight) {
+                    throw new Error('摄像头未就绪，请等待初始化完成');
+                }
+
+                // 创建canvas并截取视频帧
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext('2d');
+                
+                // 确保视频帧已加载
+                if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+                    throw new Error('视频帧未就绪，请稍后重试');
+                }
+                
+                context.drawImage(video, 0, 0);
+                
+                // 将canvas内容转换为blob
+                return new Promise((resolve, reject) => {
+                    canvas.toBlob(async (blob) => {
+                        if (!blob) {
+                            reject(new Error('图像转换失败'));
+                            return;
+                        }
+
+                        const formData = new FormData();
+                        formData.append('image', blob, 'capture.jpg');
+                        
+                        try {
+                            const response = await fetch('/api/recognize-plate', {
+                                method: 'POST',
+                                body: formData
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`服务器响应错误: ${response.status}`);
+                            }
+
+                            const result = await response.json();
+                            
+                            if (result.success && result.plate_number) {
+                                console.log('拍照识别到车牌:', result.plate_number);
+                                // 更新输入框
+                                const plateInput = document.getElementById('plate-number');
+                                if (plateInput) {
+                                    plateInput.value = result.plate_number;
+                                    // 触发输入事件
+                                    plateInput.dispatchEvent(new Event('input'));
+                                }
+                                resolve(result);
+                            } else {
+                                reject(new Error('车牌识别失败: ' + (result.message || '未知错误')));
+                            }
+                        } catch (error) {
+                            console.error('车牌识别请求失败:', error);
+                            reject(new Error('车牌识别失败，请重试'));
+                        }
+                    }, 'image/jpeg', 0.95);  // 使用较高的图片质量
+                });
+            } catch (error) {
+                console.error('拍照失败:', error);
+                alert('拍照失败: ' + error.message);
+                throw error;
+            }
+        }
+
+        /**
+         * 更新可用车位下拉列表
+         * 获取并显示所有空闲车位
+         */
+        async function updateAvailableSpots() {
+            const response = await fetch('/api/spots');
+            const spots = await response.json();
+            const select = document.getElementById('spot-select');
+            select.innerHTML = '';
+            
+            spots.filter(spot => !spot.is_occupied).forEach(spot => {
+                const option = document.createElement('option');
+                option.value = spot.spot_number;
+                option.textContent = spot.spot_number;
+                select.appendChild(option);
+            });
+        }
+
+        /**
+         * 更新已占用车位下拉列表
+         * 获取并显示所有已停车的车位
+         */
+        async function updateOccupiedSpots() {
+            const response = await fetch('/api/spots');
+            const spots = await response.json();
+            const select = document.getElementById('exit-spot-select');
+            select.innerHTML = '';
+            
+            spots.filter(spot => spot.is_occupied).forEach(spot => {
+                const option = document.createElement('option');
+                option.value = spot.spot_number;
+                option.textContent = `${spot.spot_number} (${spot.vehicle_plate})`;
+                select.appendChild(option);
+            });
+        }
+
+        /**
+         * 处理车辆入库操作
+         * 发送入库请求并更新界面
+         */
+        async function handleVehicleEnter() {
+            const plateNumber = document.getElementById('plate-number').value;
+            const spotNumber = document.getElementById('spot-select').value;
+            
+            if (!plateNumber || !spotNumber) {
+                alert('请填写完整信息');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/vehicle/enter', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        vehicle_plate: plateNumber,
+                        spot_number: spotNumber
+                    })
+                });
+                
+                const result = await response.json();
+                if (response.ok) {
+                    alert('车辆入库成功');
+                    hideModal('enter-modal');
+                    const spots = await updateParkingSpots();
+                    if (spots && spots.length > 0) {
+                        localStorage.setItem('parkingSpots', JSON.stringify(spots));
+                    }
+                } else {
+                    alert('入库失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('入库请求失败:', error);
+                alert('入库失败，请重试');
+            }
+        }
+
+        /**
+         * 处理车辆出库操作
+         * 发送出库请求并更新界面
+         */
+        async function handleVehicleExit() {
+            const spotNumber = document.getElementById('exit-spot-select').value;
+            
+            if (!spotNumber) {
+                alert('请选择车位');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/vehicle/exit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        spot_number: spotNumber
+                    })
+                });
+                
+                const result = await response.json();
+                if (response.ok) {
+                    alert(`出库成功\n停车时长: ${result.duration}\n停车费用: ${result.fee}`);
+                    hideModal('exit-modal');
+                    const spots = await updateParkingSpots();
+                    if (spots && spots.length > 0) {
+                        localStorage.setItem('parkingSpots', JSON.stringify(spots));
+                    }
+                } else {
+                    alert('出库失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('出库请求失败:', error);
+                alert('出库失败，请重试');
+            }
+        }
+
+        /**
+         * 更新出库信息显示
+         * 计算停车时长和费用
+         */
+        document.getElementById('exit-spot-select').addEventListener('change', async function() {
+            const spotNumber = this.value;
+            if (!spotNumber) return;
+            
+            try {
+                const response = await fetch('/api/spots');
+                const spots = await response.json();
+                const spot = spots.find(s => s.spot_number === spotNumber);
+                
+                if (spot && spot.is_occupied) {
+                    const entryTime = new Date(spot.entry_time);
+                    const duration = (new Date() - entryTime) / (1000 * 60 * 60); // 小时
+                    let fee = 0;
+                    
+                    if (duration <= 2) {
+                        fee = duration * 10;
+                    } else {
+                        fee = 20 + (duration - 2) * 5;
+                    }
+                    
+                    document.getElementById('exit-info').innerHTML = `
+                        <p>车牌号：${spot.vehicle_plate}</p>
+                        <p>入场时间：${entryTime.toLocaleString()}</p>
+                        <p>预计费用：¥${fee.toFixed(2)}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('获取车位信息失败:', error);
+            }
+        });
+
+        /**
+         * 更新车辆统计图表
+         * 显示近7天进出车辆统计
+         */
+        async function updateVehicleStatsChart() {
+            try {
+                console.log('开始更新车辆统计图表');
+                const response = await fetch('/api/vehicle-stats');
+                console.log('API响应状态:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('获取到的数据:', data);
+                
+                if (data.success) {
+                    const chart = window.vehicleStatsChart;
+                    if (!chart) {
+                        console.error('找不到车辆统计图表实例');
+                        return;
+                    }
+                    
+                    // 更新图表数据
+                    chart.data.labels = data.labels || ['今日数据'];
+                    chart.data.datasets[0].data = data.entries_data || [0];
+                    chart.data.datasets[1].data = data.exits_data || [0];
+                    
+                    // 更新图表
+                    chart.update('none'); // 使用 'none' 模式更新以提高性能
+                    console.log('车辆统计图表更新完成');
+                } else {
+                    console.error('API返回错误:', data.error);
+                }
+            } catch (error) {
+                console.error('更新车辆统计图表失败:', error);
+            }
+        }
+
+        /**
+         * 初始化监控摄像头
+         * 支持单摄像头和双摄像头模式
+         */
+        async function initializeMonitoringCameras() {
+            try {
+                const entranceCamera = document.getElementById('entrance-camera');
+                const exitCamera = document.getElementById('exit-camera');
+                
+                const cameras = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = cameras.filter(device => device.kind === 'videoinput');
+                
+                if (videoDevices.length >= 2) {
+                    // 如果有两个或更多摄像头，使用不同的摄像头
+                    const stream1 = await navigator.mediaDevices.getUserMedia({
+                        video: { 
+                            deviceId: videoDevices[0].deviceId,
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        }
+                    });
+                    const stream2 = await navigator.mediaDevices.getUserMedia({
+                        video: { 
+                            deviceId: videoDevices[1].deviceId,
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        }
+                    });
+                    
+                    entranceCamera.srcObject = stream1;
+                    exitCamera.srcObject = stream2;
+                } else if (videoDevices.length === 1) {
+                    // 如果只有一个摄像头，两个视频使用同一个流
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: "environment", // 优先使用后置摄像头
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        } 
+                    });
+                    entranceCamera.srcObject = stream;
+                    exitCamera.srcObject = stream;
+                } else {
+                    console.warn('没有找到可用的摄像头设备');
+                }
+            } catch (error) {
+                console.error('初始化监控摄像头失败:', error);
+            }
+        }
+
+        /**
+         * 更新车辆信息滚动显示
+         * 显示当前所有停车记录
+         */
+        async function updateVehicleScroll() {
+            try {
+                const response = await fetch('/api/spots');
+                const spots = await response.json();
+                const occupiedSpots = spots.filter(spot => spot.is_occupied);
+                
+                const scrollContent = document.getElementById('vehicle-scroll');
+                scrollContent.innerHTML = '';
+                
+                if (occupiedSpots.length === 0) {
+                    const info = document.createElement('div');
+                    info.className = 'vehicle-info';
+                    info.textContent = '暂无停车记录';
+                    scrollContent.appendChild(info);
+                    return;
+                }
+
+                // 直接添加车辆信息
+                occupiedSpots.forEach((spot) => {
+                    const entryTime = new Date(spot.entry_time);
+                    const now = new Date();
+                    const duration = Math.floor((now - entryTime) / (1000 * 60));
+                    
+                    const hours = Math.floor(duration / 60);
+                    const minutes = duration % 60;
+                    
+                    const info = document.createElement('div');
+                    info.className = 'vehicle-info';
+                    info.innerHTML = `
+                        <span>${spot.spot_number} - ${spot.vehicle_plate}</span>
+                        <span>${hours}小时${minutes}分钟</span>
+                    `;
+                    scrollContent.appendChild(info);
+                });
+
+            } catch (error) {
+                console.error('更新车辆信息显示失败:', error);
+            }
+        }
+
+        /**
+         * 更新收入数据显示
+         * 显示今日和本月收入
+         */
+        async function updateIncome() {
+            try {
+                console.log('开始更新收入数据');
+                const response = await fetch('/api/income');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('收到的收入数据:', result);
+                
+                if (result.success) {
+                    const data = result.data;
+                    // 更新侧边栏的收入显示
+                    const todayIncomeElements = document.querySelectorAll('#today-income');
+                    const monthIncomeElements = document.querySelectorAll('#month-income');
+                    
+                    todayIncomeElements.forEach(element => {
+                        element.textContent = `¥${data.today_income.toFixed(2)}`;
+                    });
+                    
+                    monthIncomeElements.forEach(element => {
+                        element.textContent = `¥${data.month_income.toFixed(2)}`;
+                    });
+                    
+                    console.log('收入数据更新完成');
+                } else {
+                    console.error('收入数据API返回错误:', result.error);
+                }
+            } catch (error) {
+                console.error('更新收入数据失败:', error);
+                // 在发生错误时保持现有显示，不更新为0
+            }
+        }
+
+        /**
+         * 更新停车位状态
+         * 实时更新所有车位的占用状态
+         */
+        async function updateParkingSpots() {
+            try {
+                const response = await fetch('/api/spots', {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const spots = await response.json();
+                
+                // 更新总车位数
+                document.getElementById('total-spots').textContent = spots.length;
+                
+                // 更新每个车位的状态
+                spots.forEach(spot => {
+                    const spotElement = document.getElementById(spot.spot_number);
+                    if (spotElement) {
+                        // 更新车位的类和状态
+                        spotElement.className = `parking-spot ${spot.is_occupied ? 'occupied' : ''}`;
+                        
+                        // 更新状态文本
+                        const statusElement = spotElement.querySelector('.spot-status');
+                        if (statusElement) {
+                            if (spot.is_occupied) {
+                                statusElement.textContent = `已占用\n${spot.vehicle_plate || ''}`;
+                            } else {
+                                statusElement.textContent = '空闲';
+                            }
+                        }
+
+                        // 保存车位数据到元素的dataset中
+                        if (spot.is_occupied) {
+                            spotElement.dataset.vehiclePlate = spot.vehicle_plate;
+                            spotElement.dataset.entryTime = spot.entry_time;
+                            spotElement.dataset.isOccupied = 'true';
+                        } else {
+                            delete spotElement.dataset.vehiclePlate;
+                            delete spotElement.dataset.entryTime;
+                            spotElement.dataset.isOccupied = 'false';
+                        }
+                    }
+                });
+
+                // 更新统计数据
+                const occupied = spots.filter(spot => spot.is_occupied).length;
+                document.getElementById('occupied-spots').textContent = occupied;
+
+                return spots; // 返回获取到的数据供其他函数使用
+            } catch (error) {
+                console.error('更新停车位状态失败:', error);
+                // 如果获取数据失败，尝试使用本地存储的数据
+                const localData = localStorage.getItem('parkingSpots');
+                if (localData) {
+                    return JSON.parse(localData);
+                }
+                return [];
+            }
+        }
+
+        /**
+         * 更新时段分布图表
+         * 显示24小时车流量分布，包括进场和出场数据
+         */
+        async function updateTimeDistributionChart() {
+            console.log('开始更新时段分布图表');
+            try {
+                const response = await fetch('/api/time-distribution');
+                console.log('API响应状态:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('获取到的数据:', result);
+                
+                if (!timeDistributionChart) {
+                    console.error('图表实例不存在');
+                    return;
+                }
+                
+                if (result.success) {
+                    const data = result.data;
+                    // 更新数据集
+                    timeDistributionChart.data.datasets[0].data = data.hourly_data.entries;
+                    timeDistributionChart.data.datasets[1].data = data.hourly_data.exits;
+                    
+                    // 更新图表
+                    timeDistributionChart.update();
+                    console.log('图表更新完成');
+                    
+                    // 更新统计信息
+                    await updateTimeDistributionStats(data);
+                } else {
+                    console.error('API返回错误:', result.error);
+                }
+            } catch (error) {
+                console.error('更新时段分布图表失败:', error);
+            }
+        }
+
+        async function updateTimeDistributionStats(data) {
+            try {
+                // 获取实时停车数据
+                const response = await fetch('/api/spots');
+                const spots = await response.json();
+                
+                // 计算当前停车数
+                const currentParked = spots.filter(spot => spot.is_occupied).length;
+                
+                // 获取今日进出场统计
+                const statsResponse = await fetch('/api/daily-stats');
+                const statsData = await statsResponse.json();
+                
+                // 更新统计数据显示
+                document.getElementById('total-entries').textContent = `${statsData.total_entries || 0} 辆`;
+                document.getElementById('total-exits').textContent = `${statsData.total_exits || 0} 辆`;
+                document.getElementById('current-parked').textContent = `${currentParked} 辆`;
+            } catch (error) {
+                console.error('更新统计数据失败:', error);
+                // 发生错误时显示默认值
+                document.getElementById('total-entries').textContent = '0 辆';
+                document.getElementById('total-exits').textContent = '0 辆';
+                document.getElementById('current-parked').textContent = '0 辆';
+            }
+        }
+
+        // 放大摄像头画面
+        function expandCamera(type) {
+            const modal = document.getElementById('camera-modal');
+            const modalVideo = document.getElementById('expanded-camera');
+            const sourceVideo = document.getElementById(`${type}-camera`);
+            const modalTitle = document.getElementById('camera-modal-title');
+            
+            // 设置标题
+            modalTitle.textContent = type === 'entrance' ? '入场监控' : '出场监控';
+            
+            // 复制视频流
+            if (sourceVideo.srcObject) {
+                modalVideo.srcObject = sourceVideo.srcObject;
+                modalVideo.play();
+            }
+            
+            // 显示模态框
+            modal.style.display = 'block';
+            
+            // 添加键盘事件监听
+            document.addEventListener('keydown', handleModalKeyPress);
+        }
+
+        // 关闭放大的摄像头画面
+        function closeExpandedCamera() {
+            const modal = document.getElementById('camera-modal');
+            const modalVideo = document.getElementById('expanded-camera');
+            
+            // 停止视频流
+            if (modalVideo.srcObject) {
+                modalVideo.srcObject = null;
+            }
+            
+            // 隐藏模态框
+            modal.style.display = 'none';
+            
+            // 移除键盘事件监听
+            document.removeEventListener('keydown', handleModalKeyPress);
+        }
+
+        // 处理键盘事件
+        function handleModalKeyPress(event) {
+            if (event.key === 'Escape') {
+                closeExpandedCamera();
+            }
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('camera-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeExpandedCamera();
+            }
+        });
+
+        // 初始化网络状态图表
+        function initializeNetworkChart() {
+            const ctx = document.getElementById('network-chart');
+            networkChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(20).fill(''),
+                    datasets: [{
+                        data: Array(20).fill(0),
+                        borderColor: 'rgba(0, 228, 255, 0.8)',
+                        backgroundColor: 'rgba(0, 228, 255, 0.2)',
+                        borderWidth: 1,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            display: false,
+                            beginAtZero: true
+                        },
+                        x: {
+                            display: false
+                        }
+                    },
+                    animation: false
+                }
+            });
+        }
+
+        // 更新网络状态
+        function updateNetworkStatus() {
+            const startTime = performance.now();
+            fetch('/api/ping')
+                .then(response => response.json())
+                .then(data => {
+                    const latency = Math.round(performance.now() - startTime);
+                    document.getElementById('network-speed').textContent = `${latency} ms`;
+                    document.getElementById('network-latency').textContent = `${latency}ms`;
+                    
+                    // 更新图表数据
+                    networkChart.data.datasets[0].data.shift();
+                    networkChart.data.datasets[0].data.push(latency);
+                    networkChart.update();
+                })
+                .catch(error => {
+                    console.error('网络状态检查失败:', error);
+                    document.getElementById('network-speed').textContent = '连接失败';
+                });
+        }
+
+        // 更新摄像头状态
+        function updateCameraStatus() {
+            const entranceCamera = document.getElementById('entrance-camera');
+            const exitCamera = document.getElementById('exit-camera');
+            const statusIndicator = document.getElementById('camera-status');
+            const statusText = document.getElementById('camera-status-text');
+            
+            if (entranceCamera.srcObject || exitCamera.srcObject) {
+                statusIndicator.className = 'status-indicator connected';
+                statusText.textContent = '已连接';
+            } else {
+                statusIndicator.className = 'status-indicator disconnected';
+                statusText.textContent = '未连接';
+            }
+        }
+
+        // 更新数据库状态
+        function updateDBStatus() {
+            fetch('/api/db-status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusIndicator = document.getElementById('db-status');
+                    const statusText = document.getElementById('db-status-text');
+                    
+                    if (data.connected) {
+                        statusIndicator.className = 'status-indicator connected';
+                        statusText.textContent = '已连接';
+                    } else {
+                        statusIndicator.className = 'status-indicator disconnected';
+                        statusText.textContent = '未连接';
+                    }
+                })
+                .catch(error => {
+                    const statusIndicator = document.getElementById('db-status');
+                    const statusText = document.getElementById('db-status-text');
+                    statusIndicator.className = 'status-indicator disconnected';
+                    statusText.textContent = '连接失败';
+                });
+        }
+
+        // 显示收入详情模态框
+        function showIncomeModal() {
+            document.getElementById('income-modal').style.display = 'block';
+            if (!incomeChart) {
+                initializeIncomeChart();
+            }
+        }
+
+        // 隐藏收入详情模态框
+        function hideIncomeModal() {
+            document.getElementById('income-modal').style.display = 'none';
+        }
+
+        // 初始化收入图表
+        function initializeIncomeChart() {
+            console.log('初始化收入图表');
+            const ctx = document.getElementById('income-chart');
+            if (!ctx) {
+                console.error('找不到收入图表容器');
+                return;
+            }
+
+            try {
+                incomeChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: '收入金额（元）',
+                            data: [],
+                            borderColor: 'rgba(0, 228, 255, 0.8)',
+                            backgroundColor: 'rgba(0, 228, 255, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: '#ffffff',
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        return `收入: ¥${context.raw.toFixed(2)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#ffffff',
+                                    callback: function(value) {
+                                        return '¥' + value.toFixed(2);
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#ffffff',
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+                console.log('收入图表初始化完成');
+            } catch (error) {
+                console.error('收入图表初始化失败:', error);
+            }
+        }
+
+        // 加载收入数据
+        async function loadIncomeData(filter) {
+            try {
+                console.log('开始加载收入数据:', filter);
+                // 更新过滤器按钮状态
+                document.querySelectorAll('.income-filter').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`.income-filter[onclick*="${filter}"]`).classList.add('active');
+
+                // 获取收入数据
+                const response = await fetch(`/api/income-details?filter=${filter}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('收入数据结果:', result);
+
+                if (result.success) {
+                    const data = result.data;
+                    
+                    // 更新图表
+                    if (!incomeChart) {
+                        initializeIncomeChart();
+                    }
+                    incomeChart.data.labels = data.labels;
+                    incomeChart.data.datasets[0].data = data.income;
+                    incomeChart.update();  // 确保图表更新
+
+                    // 更新表格
+                    const tbody = document.querySelector('.income-table tbody');
+                    tbody.innerHTML = '';
+                    data.labels.forEach((label, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${label}</td>
+                            <td>¥${data.income[index].toFixed(2)}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    // 更新总计
+                    const todayIncomeElements = document.querySelectorAll('#today-income');
+                    const monthIncomeElements = document.querySelectorAll('#month-income');
+                    
+                    // 获取最新的收入数据
+                    const incomeResponse = await fetch('/api/income');
+                    const incomeResult = await incomeResponse.json();
+                    
+                    if (incomeResult.success) {
+                        const incomeData = incomeResult.data;
+                        todayIncomeElements.forEach(element => {
+                            element.textContent = `¥${incomeData.today_income.toFixed(2)}`;
+                        });
+                        monthIncomeElements.forEach(element => {
+                            element.textContent = `¥${incomeData.month_income.toFixed(2)}`;
+                        });
+                    }
+                } else {
+                    console.error('加载收入数据失败:', result.error);
+                }
+            } catch (error) {
+                console.error('加载收入数据失败:', error);
+            }
+        }
+
+        // 过滤收入数据
+        function filterIncome(type) {
+            loadIncomeData(type);
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('income-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                hideIncomeModal();
+            }
+        });
+
+        // 显示停车场分析模态框
+        function showAnalyticsModal() {
+            document.getElementById('analytics-modal').style.display = 'block';
+            if (!analyticsChart) {
+                initializeAnalyticsChart();
+            }
+        }
+
+        // 隐藏停车场分析模态框
+        function hideAnalyticsModal() {
+            document.getElementById('analytics-modal').style.display = 'none';
+        }
+
+        // 初始化分析图表
+        function initializeAnalyticsChart() {
+            const ctx = document.getElementById('analytics-chart');
+            analyticsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '车位利用率',
+                        data: [],
+                        borderColor: 'rgba(0, 228, 255, 0.8)',
+                        backgroundColor: 'rgba(0, 228, 255, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#ffffff',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `利用率: ${context.raw.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff',
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 加载分析数据
+        async function loadAnalyticsData(filter) {
+            try {
+                console.log('开始加载分析数据:', filter);
+                // 更新过滤器按钮状态
+                document.querySelectorAll('.analytics-filter').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`.analytics-filter[onclick*="${filter}"]`).classList.add('active');
+
+                // 获取分析数据
+                const response = await fetch(`/api/analytics?filter=${filter}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('分析数据结果:', result);
+
+                if (result.success) {
+                    const data = result.data;
+                    
+                    // 更新统计卡片
+                    document.getElementById('utilization-rate').textContent = `${data.utilization_rate.toFixed(1)}%`;
+                    document.getElementById('turnover-rate').textContent = data.turnover_rate.toFixed(2);
+                    document.getElementById('avg-duration').textContent = `${data.avg_duration.toFixed(1)}小时`;
+                    document.getElementById('peak-hours').textContent = data.peak_hours;
+
+                    // 更新图表
+                    if (!analyticsChart) {
+                        initializeAnalyticsChart();
+                    }
+                    analyticsChart.data.labels = data.chart_data.labels;
+                    analyticsChart.data.datasets[0].data = data.chart_data.utilization;
+                    analyticsChart.update();
+
+                    // 更新区域统计表格
+                    const tbody = document.getElementById('area-stats-body');
+                    tbody.innerHTML = '';
+                    Object.entries(data.area_stats).forEach(([area, stats]) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${area}区</td>
+                            <td>${stats.total}</td>
+                            <td>${stats.occupied}</td>
+                            <td>${stats.occupancy_rate}%</td>
+                            <td>${stats.today_traffic}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    console.error('加载分析数据失败:', result.error);
+                }
+            } catch (error) {
+                console.error('加载分析数据失败:', error);
+            }
+        }
+
+        // 过滤分析数据
+        function filterAnalytics(type) {
+            loadAnalyticsData(type);
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('analytics-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                hideAnalyticsModal();
+            }
+        });
+
+        // 处理模态框中的图片上传
+        async function handleModalImageUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // 检查文件类型
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('请上传JPG或PNG格式的图片文件');
+                return;
+            }
+
+            // 检查文件大小（限制为5MB）
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                alert(`图片大小不能超过5MB，当前大小：${(file.size / 1024 / 1024).toFixed(2)}MB`);
+                return;
+            }
+
+            // 显示加载状态
+            const uploadBtn = input.parentElement;
+            const originalText = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 识别中...';
+            uploadBtn.disabled = true;
+
+            try {
+                // 创建FormData对象
+                const formData = new FormData();
+                formData.append('image', file);
+
+                // 发送识别请求
+                const response = await fetch('/api/recognize-plate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`服务器响应错误: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success && result.plate_number) {
+                    console.log('上传图片识别到车牌:', result.plate_number);
+                    // 更新输入框
+                    const plateInput = document.getElementById('plate-number');
+                    if (plateInput) {
+                        plateInput.value = result.plate_number;
+                        // 触发输入事件
+                        plateInput.dispatchEvent(new Event('input'));
+                    }
+                } else {
+                    throw new Error(result.message || '车牌识别失败');
+                }
+            } catch (error) {
+                console.error('车牌识别请求失败:', error);
+                alert(`车牌识别失败: ${error.message}`);
+            } finally {
+                // 恢复按钮状态
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+                // 清空文件输入框，允许重复上传同一文件
+                input.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
