@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify
 from datetime import datetime, timedelta, time
 import os
 from werkzeug.utils import secure_filename
-from plate_recognition import PlateRecognizer
+from backend.plate_recognition import PlateRecognizer
 from parking_analytics import ParkingAnalytics
 from dotenv import load_dotenv
 import pymysql
