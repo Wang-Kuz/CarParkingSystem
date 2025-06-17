@@ -1,0 +1,16 @@
+# 忽略 macOS 系统文件
+.DS_Store
+
+# 忽略 PyCharm / IDEA 项目配置
+.idea/
+
+# 忽略 Python 编译缓存
+__pycache__/
+*.pyc
+
+# 忽略虚拟环境
+venv/
+.env
+
+# 忽略日志
+*.log
